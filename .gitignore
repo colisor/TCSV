@@ -1,0 +1,25 @@
+# Dados pesados — não subir
+data/microns/
+data/connectivity/
+data/ephys/
+*.h5
+*.nwb
+
+# Python
+__pycache__/
+*.pyc
+venv/
+*.egg-info/
+
+# Sistema
+.DS_Store
+*.swp
+
+# Overleaf sync
+*.aux
+*.log
+*.synctex.gz
+*.out
+*.bbl
+*.blg
+nbS1-HEX0-*/

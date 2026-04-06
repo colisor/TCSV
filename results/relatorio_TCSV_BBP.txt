@@ -1,0 +1,41 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║   TCSV 2.0 — RELATÓRIO DE FALSIFICABILIDADE                 ║
+║   Dataset: nbS1-HEX0-L23 (SSCx L2/3, rato)                 ║
+║   Blue Brain Open Data / Open Brain Institute               ║
+╠══════════════════════════════════════════════════════════════╣
+║  TESTE: Estrutura de Atratores em J_ij                      ║
+╠══════════════════════════════════════════════════════════════╣
+║                                                              ║
+║  n neurônios          : 8173                                 ║
+║  n sinapses           : 974129  (sparsidade 1.46%)           ║
+║  λ+ Marchenko-Pastur  : 89.01                                ║
+║  Outliers detectados  : 20  (16 positivos + 4 negativos)    ║
+║  λmax                 : 720.93  (8.1× acima do ruído)        ║
+║  Rank efetivo         : 0.24%                                ║
+║                                                              ║
+╠══════════════════════════════════════════════════════════════╣
+║  PREDIÇÃO 1: Outliers > 0 (atratores existem)               ║
+║  RESULTADO : 20 outliers  →  CONFIRMADO                     ║
+║                                                              ║
+║  PREDIÇÃO 2: Espaçamento regular (quantização n=1..6)        ║
+║  RESULTADO : CV = 1.385   →  NÃO CONFIRMADO                 ║
+║  NOTA      : Espaçamento irregular — predição muito forte    ║
+║              da TCSV requer revisão ou refinamento           ║
+║                                                              ║
+║  PREDIÇÃO 3: Espectro de potência 1/f                        ║
+║  RESULTADO : λ_k ~ k^-0.45  R²=0.990  →  CONSISTENTE    ║
+║  NOTA      : Expoente -0.45 ≠ -0.5 mas lei de potência     ║
+║              clara conecta atratores ao espectro neural      ║
+║                                                              ║
+║  BÔNUS (não previsto): Repulsão de níveis GOE                ║
+║  RESULTADO : <r>=0.535 ≈ GOE (0.536)  →  NOVO FENÔMENO     ║
+║  NOTA      : Atratores são modos coletivos ortogonais com    ║
+║              estatística de Wigner-Dyson — caos quântico     ║
+║              em rede sináptica biológica real                ║
+╠══════════════════════════════════════════════════════════════╣
+║  VEREDICTO GLOBAL: PARCIALMENTE CONSISTENTE                  ║
+║  A existência de atratores é confirmada.                     ║
+║  A quantização específica (n≤6) não foi encontrada.          ║
+║  A repulsão GOE é um resultado novo não previsto.            ║
+╚══════════════════════════════════════════════════════════════╝
