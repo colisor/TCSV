@@ -23,3 +23,10 @@ venv/
 *.bbl
 *.blg
 nbS1-HEX0-*/
+*.fdb_latexmk
+*.fls
+*.pdf
+*.bib
+*.aux
+*.log
+*.synctex.gz

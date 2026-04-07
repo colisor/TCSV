@@ -1,0 +1,728 @@
+%% REVTeX 4-2 — Physical Review E
+%% Compile: pdflatex → bibtex → pdflatex × 2
+%% Figures must be in the same directory as this .tex file
+\documentclass[aps,pre,twocolumn,showpacs,superscriptaddress,longbibliography]{revtex4-2}
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{dcolumn}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{multirow}
+
+%% ── Custom commands ─────────────────────────────────────────
+\newcommand{\lp}{\lambda_{+}}
+\newcommand{\lmax}{\lambda_{\max}}
+\newcommand{\rGOE}{\langle r \rangle}
+\newcommand{\kN}{k/N}
+\newcommand{\taupop}{\tau_{\mathrm{pop}}}
+\newcommand{\tauISI}{\tau_{\mathrm{ISI}}}
+\newcommand{\tauabs}{\tau_{\mathrm{abs}}}
+\newcommand{\hneu}{h_{\mathrm{neural}}}
+\newcommand{\rhoinfo}{\rho_{\mathrm{info}}}
+\newcommand{\fUV}{f_{\mathrm{UV}}}
+
+\begin{document}
+
+%% ════════════════════════════════════════════════════════════
+%%  TITLE & AUTHORS
+%% ════════════════════════════════════════════════════════════
+\title{Power-law spectral structure of synaptic connectivity matrices
+       is conserved across cortical areas, layers, and species}
+
+\author{Gesivaldo Santos}
+\email{gesivaldo@uesb.edu.br}
+\affiliation{Department of Biological Science,
+             State University of Southwest Bahia (UESB),
+             Jequié, Bahia, Brazil}
+
+\date{\today}
+
+%% ════════════════════════════════════════════════════════════
+%%  ABSTRACT
+%% ════════════════════════════════════════════════════════════
+\begin{abstract}
+The cortical microcircuit operates under strict metabolic constraints
+that limit simultaneous neuronal firing to approximately 15\% of the
+local population. We show that this constraint, formalized within a
+thermodynamic framework for neural ensemble dynamics, predicts a
+discrete set of collective synaptic modes---attractors---whose spectral
+structure follows a universal power law. Applying random matrix theory
+to two independent connectivity datasets---the Blue Brain Project
+neocortical simulation (BBP, $n=8{,}173$ neurons, rat somatosensory
+cortex L2/3) and the MICrONS electron microscopy reconstruction
+($n=50{,}948$ neurons, mouse visual cortex, measured synaptic volumes
+in nm$^3$)---we find that the ranked eigenvalues of the symmetrized
+synaptic weight matrix follow $\lambda_k \sim k^\alpha$ with
+$\alpha = {-}0.450 \pm 0.074$ (BBP, 95\% CI $[-0.539, -0.260]$)
+and $\alpha = {-}0.422 \pm 0.062$ (MICrONS, 95\% CI $[-0.502, -0.267]$),
+statistically indistinguishable across species, cortical areas, and
+data modalities (bootstrap $n = 1{,}000$; overlapping CIs).
+This exponent is destroyed by degree-preserving rewiring
+(null model $\alpha = {-}0.141 \pm 0.009$, $p < 0.001$,
+$n = 500$ permutations), and is the preferred model over exponential
+and harmonic alternatives by formal AIC selection ($\Delta\mathrm{AIC} > 23$
+in both datasets). Both datasets exhibit $\sim$20 eigenvalues above the
+Marchenko-Pastur bulk, with level-spacing statistics consistent with the
+Gaussian Orthogonal Ensemble ($\rGOE = 0.535$ and $0.654$).
+A laminar analysis across cortical layers reveals a monotonic depth
+gradient in $\alpha$ (L2/3: $-0.451$ to L5/L6: $-0.531$,
+$R^2 = 0.91$), confirmed by a layer-matched cross-dataset comparison
+(BBP L4: $\alpha = -0.525$; MICrONS L4: $\alpha = -0.557$,
+$\Delta\alpha = 0.032$, within bootstrap uncertainty).
+We derive from first principles that the maximum number of
+non-overlapping active ensembles before universal refractoriness is
+$n_{\max} = \lfloor N/k \rfloor = 6$, providing a thermodynamic
+derivation of the six canonical EEG frequency bands
+($f_n = 1/(n\taupop)$, $n = 1,\ldots,6$). Two distinct spectral
+cutoffs emerge: an ensemble cutoff (Debye analog,
+$\fUV^{\mathrm{ens}} = 114\,\mathrm{Hz}$ at rest) and an
+invariant neuronal cutoff (Planck analog,
+$\fUV^{\mathrm{neural}} = 587\,\mathrm{Hz}$), consistent with
+empirical reports of very high-frequency oscillations in human
+somatosensory cortex (407--926\,Hz) and thalamus (1235--2632\,Hz).
+Phase-space reconstruction via Takens delay embedding reveals a
+quasi-1D attractor ($d_f \approx 1.1$) with negative maximal Lyapunov
+exponent ($\lambda_L = {-}0.224$ in simulation, $-0.082$ in EM data),
+with the EM value approaching the critical point ($\lambda_L \to 0$),
+consistent with the cortical criticality hypothesis.
+\end{abstract}
+
+\pacs{87.19.lj, 87.19.lv, 05.45.Tp, 87.10.Mn}
+
+\keywords{random matrix theory, synaptic connectivity, power-law spectrum,
+Marchenko-Pastur, Wigner-Dyson, electron microscopy, Blue Brain Project,
+MICrONS, cortical attractors, neural thermodynamics, Takens embedding,
+UV catastrophe, EEG frequency bands}
+
+\maketitle
+
+%% ════════════════════════════════════════════════════════════
+%%  I. INTRODUCTION
+%% ════════════════════════════════════════════════════════════
+\section{\label{sec:intro}Introduction}
+
+The neocortical microcircuit---a canonical column of approximately
+$N \approx 100$ neurons~\cite{Mountcastle1997}---constitutes the
+fundamental computational unit of the mammalian cerebral cortex.
+A central empirical constraint on its operation is the sparse activation
+regime: at any moment, only a fraction $\kN \approx 0.15$ of the
+local population fires simultaneously, a constraint arising from
+the strict metabolic budget of cortical tissue~\cite{Attwell2001}.
+
+Random matrix theory (RMT) provides a natural framework for characterizing
+the spectral properties of complex connectivity matrices~\cite{Mehta2004}.
+The bulk of the eigenvalue spectrum of a random synaptic weight matrix is
+described by the Marchenko-Pastur (MP) distribution. Eigenvalues exceeding
+the MP upper edge $\lp$ indicate structured, low-rank components---the
+spectral signature of learned or evolved synaptic
+attractors~\cite{Mastrogiuseppe2018}.
+
+Here we combine RMT analysis with two large-scale connectivity datasets:
+the Blue Brain Project (BBP) neocortical microcircuit model~\cite{Markram2015},
+and the MICrONS dataset~\cite{MICrONS2021}, a volumetric electron microscopy
+(EM) reconstruction of mouse visual cortex providing direct measurements
+of synaptic volumes in nm$^3$---a physical proxy for synaptic strength.
+
+We find that the outlier eigenvalues in both datasets follow a universal
+power law $\lambda_k \sim k^\alpha$ with $\alpha \approx -0.43$,
+conserved across species, cortical areas, and data modalities. Formal
+AIC model selection confirms the power law as the preferred model
+($\Delta\mathrm{AIC} > 23$). We further derive the discrete EEG
+frequency bands and two UV spectral cutoffs from first principles
+using metabolic constraints alone, and show that the phase-space
+geometry of the spectral attractor is consistent with cortical
+criticality.
+
+%% ════════════════════════════════════════════════════════════
+%%  II. METHODS
+%% ════════════════════════════════════════════════════════════
+\section{\label{sec:methods}Data and Methods}
+
+\subsection{Datasets}
+
+\paragraph{Blue Brain Project (BBP).}
+We use the publicly available neocortical microcircuit model
+of juvenile rat somatosensory cortex from the Open Brain Institute
+AWS S3 repository (\texttt{s3://openbluebrain/}).
+The L2/3 matrix: $n = 8{,}173$ neurons, $974{,}129$ synapses.
+We also analyzed layers L4 ($n=4{,}870$), L5 ($n=5{,}824$),
+and L6 ($n=11{,}032$).
+
+\paragraph{MICrONS V1.}
+The MICrONS cortical mm$^3$ dataset~\cite{MICrONS2021} provides
+EM reconstruction of mouse primary visual cortex (V1):
+$n = 50{,}948$ neurons, $11{,}554{,}213$ synapses, with measured
+synaptic volumes in nm$^3$ (field \texttt{source\_\_size}).
+Log-transformed weights $w_{ij} = \ln(V_{ij}^{\mathrm{syn}})$
+are used for spectral analysis, consistent with the empirical
+log-normal distribution of synaptic sizes~\cite{Bhatt2009}.
+A layer-matched L4 subsample was extracted via cortical depth
+coordinates ($n_{L4} = 10{,}188$ neurons,
+$1{,}664{,}367$ L4$\to$L4 synapses).
+
+\paragraph{Electrophysiology.}
+Nine patch-clamp recordings from rat SSCx neurons (IDRest protocol)
+from the BBP electrophysiology repository were analyzed to validate
+$\taupop$.
+
+\subsection{Spectral analysis}
+
+The symmetrized weight matrix $J_s = (J + J^T)/2$ was analyzed.
+The MP upper edge is $\lp = 4\sigma^2$ (square matrix case).
+Top $k=30$ eigenvalues were computed via sparse Lanczos
+(\texttt{scipy.sparse.linalg.eigsh}, ARPACK).
+The power-law exponent $\alpha$ was fit by OLS in log-log space;
+95\% confidence intervals by non-parametric bootstrap ($n=1{,}000$).
+
+\subsection{Model selection}
+
+Four models were compared via AIC ($= 2k - 2\ln\hat{L}$):
+power law $\lambda_k \sim k^\alpha$ (2 params),
+Boltzmann $\sim e^{Bk}$ (2 params),
+harmonic $\sim \lambda_1/k$ (1 param),
+and log-normal $\sim e^{a(\ln k)^2}$ (2 params).
+
+\subsection{Null models}
+
+Three levels: (1) weight shuffling (topology preserved),
+(2) per-neuron destination shuffling (out-degree preserved),
+(3) full rewiring (configuration model, $n=500$ permutations
+on $10^5$-edge subsample). Statistical significance:
+$p = P(\alpha_{\mathrm{null}} \leq \alpha_{\mathrm{real}})$.
+
+\subsection{Phase-space analysis}
+
+Takens delay embedding~\cite{Takens1981} with $d=2,3$, $\tau=1$.
+Correlation dimension $d_f$ from slope of $\ln C(r)$ vs $\ln r$.
+Maximal Lyapunov exponent via Rosenstein algorithm~\cite{Rosenstein1993}.
+
+%% ════════════════════════════════════════════════════════════
+%%  III. SPECTRAL ANALYSIS
+%% ════════════════════════════════════════════════════════════
+\section{\label{sec:rmt}Spectral analysis and universal power law}
+
+\subsection{Marchenko-Pastur analysis and synaptic attractors}
+
+Figure~\ref{fig:marchenko} shows the eigenvalue spectrum of the
+BBP L2/3 connectivity matrix. The bulk follows the MP distribution
+($\lp = 89.0$), with $K = 20$ outlier eigenvalues
+($\lmax = 720.9$, $\lmax/\lp = 8.1\times$) and level-spacing ratio
+$\rGOE = 0.535 \approx 0.536$ (GOE prediction), confirming
+Wigner-Dyson statistics.
+
+For MICrONS ($\lp = 4.21$ after log-normalization): $K = 22$
+outliers, $\lmax/\lp = 1{,}626\times$, $\rGOE = 0.654 > \mathrm{GOE}$.
+The elevated $\rGOE$ in EM data may reflect directional asymmetry
+(E/I balance) absent in the symmetrized simulation.
+
+\subsection{Universal power law and AIC model selection}
+
+Figure~\ref{fig:powerlaw} shows the ranked outlier eigenvalues
+for both datasets and all four candidate models. Results:
+
+\begin{equation}
+  \lambda_k \sim k^\alpha, \quad \alpha = \begin{cases}
+    -0.450 \pm 0.074 & \text{(BBP L2/3, }R^2=0.990\text{)} \\
+    -0.422 \pm 0.062 & \text{(MICrONS V1, }R^2=0.984\text{)}
+  \end{cases}
+  \label{eq:alpha}
+\end{equation}
+
+Bootstrap 95\% CIs overlap ($[-0.539,-0.260]$ and $[-0.502,-0.267]$);
+$H_0: \alpha_{\mathrm{BBP}} = \alpha_{\mathrm{MIC}}$ is not rejected.
+AIC model selection (Fig.~\ref{fig:final}) confirms the power law
+as uniquely preferred: $\Delta\mathrm{AIC} = 25.6$ (BBP) and
+$23.0$ (MICrONS) vs.\ the next-best log-normal model. The harmonic
+model ($1/k$, the $T{=}0$ quantum limit) is eliminated with
+$\Delta\mathrm{AIC} > 219$.
+
+%% ════════════════════════════════════════════════════════════
+%%  IV. NULL MODEL VALIDATION
+%% ════════════════════════════════════════════════════════════
+\section{\label{sec:null}Null model validation}
+
+\begin{table}[h]
+\caption{\label{tab:null}Null model hierarchy (MICrONS V1).}
+\begin{ruledtabular}
+\begin{tabular}{lccc}
+Model & $N_{\mathrm{out}}$ & $\lmax/\lp$ & $\alpha$ \\
+\hline
+Real (biological)         & 22 & 1626  & $-0.416$ \\
+Null-1 (weights shuffled) & 22 & 1640  & $-0.416$ \\
+Null-2 (destinations)     & 22 & 1620  & $-0.416$ \\
+Null-3 (full rewiring)    & 20 &   74  & $-0.333$ \\
+Null-3 distribution       & —  &    —  & $-0.141 \pm 0.009$ \\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+The number of outlier modes ($K\approx 20$) is topological
+(preserved under Null-1,2), determined by the degree distribution.
+The exponent $\alpha$ and energy ratio $\lmax/\lp$ are
+biologically specific: both are destroyed by full rewiring
+(Null-3), with $p < 0.001$ over 500 permutations
+(Fig.~\ref{fig:bootstrap}).
+
+%% ════════════════════════════════════════════════════════════
+%%  V. LAMINAR GRADIENT
+%% ════════════════════════════════════════════════════════════
+\section{\label{sec:laminar}Laminar gradient and cross-dataset validation}
+
+\begin{table}[h]
+\caption{\label{tab:layers}Spectral properties by cortical layer.}
+\begin{ruledtabular}
+\begin{tabular}{lrrrrr}
+Layer & $n$ & $K$ & $\alpha$ & $R^2$ & $\rGOE$ \\
+\hline
+BBP L2/3    &  8{,}173 & 20 & $-0.451$ & 0.992 & 0.558 \\
+BBP L4      &  4{,}870 & 19 & $-0.500$ & 0.972 & 0.540 \\
+BBP L5      &  5{,}824 & 19 & $-0.531$ & 0.973 & 0.515 \\
+BBP L6      & 11{,}032 & 21 & $-0.531$ & 0.993 & 0.473 \\
+\hline
+MICrONS V1  & 50{,}948 & 22 & $-0.422$ & 0.984 & 0.654 \\
+MICrONS L4  & 10{,}188 & 17 & $-0.557$ & 0.994 & —    \\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+$\alpha$ steepens monotonically with cortical depth
+(Fig.~\ref{fig:laminar}), from $-0.451$ (L2/3) to $-0.531$
+(L5/L6, $R^2 = 0.91$ for linear fit to depth), while $\rGOE$
+decreases from $0.558$ toward Poisson. The layer-matched
+comparison (BBP L4: $\alpha=-0.525$; MICrONS L4: $\alpha=-0.557$;
+$\Delta\alpha = 0.032$, Fig.~\ref{fig:final}) confirms that the
+difference between the full-dataset comparison ($\Delta\alpha=0.028$)
+is primarily laminar, not species- or area-specific.
+
+%% ════════════════════════════════════════════════════════════
+%%  VI. THERMODYNAMIC DERIVATION
+%% ════════════════════════════════════════════════════════════
+\section{\label{sec:thermo}Thermodynamic derivation of EEG bands
+         and dual UV cutoffs}
+
+\subsection{Population integration time}
+
+From patch-clamp recordings ($n=9$ cells, rat SSCx; 
+Fig.~\ref{fig:tau}), median $\tauISI = 49.8\,\mathrm{ms}$.
+The population integration time follows from the central limit
+theorem applied to $k$ partially correlated spike trains:
+\begin{equation}
+  \taupop = \tauISI \cdot \sqrt{\kN} = 49.8\times\sqrt{0.15}
+           = 19.3\,\mathrm{ms}.
+  \label{eq:taupop}
+\end{equation}
+Three electrophysiological regimes are identified:
+$\tauISI \in \{49.8, 8.5, 4.4\}\,\mathrm{ms}$ (rest, attention,
+alert), corresponding to $\taupop \in \{19.3, 3.3, 1.7\}\,\mathrm{ms}$.
+
+\subsection{Metabolic UV cutoff and EEG quantization}
+
+The maximum number of non-overlapping ensembles before all $N$
+neurons are simultaneously refractory:
+\begin{equation}
+  n_{\max} = \left\lfloor\frac{N}{k}\right\rfloor
+           = \left\lfloor\frac{1}{\kN}\right\rfloor = 6.
+  \label{eq:nmax}
+\end{equation}
+The $n$-th oscillatory mode has frequency:
+\begin{equation}
+  f_n(\mathrm{state}) = \frac{1}{n\cdot\tauISI(\mathrm{state})\cdot\sqrt{\kN}},
+  \quad n = 1,\ldots,6.
+  \label{eq:fn}
+\end{equation}
+The harmonic series $f_1:f_2:\cdots:f_6 = 1:1/2:\cdots:1/6$
+is the invariant; $f_1$ scales with cognitive state through $\tauISI$.
+At rest ($\taupop = 19.3\,\mathrm{ms}$) this yields:
+$\{52, 26, 17, 13, 10, 9\}\,\mathrm{Hz}$, corresponding to the
+canonical $\gamma$-through-$\theta$ bands.
+
+\subsection{Dual UV cutoffs: Debye and Planck analogs}
+
+Two distinct spectral limits emerge (Fig.~\ref{fig:planck}):
+
+\textit{Ensemble cutoff} (Debye analog, state-dependent):
+\begin{equation}
+  \fUV^{\mathrm{ens}}(\mathrm{state}) = \frac{N/k-1}{\tauISI(\mathrm{state})}
+  \label{eq:fUV_ens}
+\end{equation}
+At rest: $114\,\mathrm{Hz}$; under attention: $667\,\mathrm{Hz}$.
+
+\textit{Neuronal absolute cutoff} (Planck analog, invariant):
+\begin{equation}
+  \fUV^{\mathrm{neural}} = \frac{1}{\tauabs\cdot\sqrt{\kN}}
+  \approx 587\,\mathrm{Hz},
+  \label{eq:fUV_neural}
+\end{equation}
+determined solely by the absolute refractory period
+$\tauabs \approx 4.4\,\mathrm{ms}$ (measured). A remarkable
+identity holds: at maximum alertness
+($\tauISI \to \tauabs$), $f_1(\tauabs) = \fUV^{\mathrm{neural}}$
+--- the fundamental mode coincides with the physical ceiling.
+
+This invariant cutoff ($\approx 600\,\mathrm{Hz}$) is consistent
+with empirical HFOs in human somatosensory cortex (407--926\,Hz
+subdural~\cite{Hashimoto2009}) and thalamic VFOs
+(1235--2632\,Hz~\cite{Hashimoto2009}), where the smaller thalamic
+$\tauabs \approx 1\,\mathrm{ms}$ predicts
+$\fUV^{\mathrm{thal}} = 587 \times (4.4/1) \approx 2580\,\mathrm{Hz}$,
+in excellent agreement.
+
+The dynamic EEG spectrum across states is shown in
+Fig.~\ref{fig:spectrum}.
+
+%% ════════════════════════════════════════════════════════════
+%%  VII. PHASE SPACE
+%% ════════════════════════════════════════════════════════════
+\section{\label{sec:phase}Phase-space geometry of spectral attractors}
+
+Takens delay embedding of the outlier eigenvalue sequence reveals
+a quasi-1D attractor (Fig.~\ref{fig:takens}): correlation dimension
+$d_f = 1.15$ (BBP, $R^2 = 0.98$) and $d_f = 1.07$ (MICrONS,
+$R^2 = 0.99$). The slight excess above $d_f=1$ (a perfect power law)
+reflects thermal fluctuations in $\kN$.
+
+The maximal Lyapunov exponent is $\lambda_L = -0.224$ (BBP) and
+$\lambda_L = -0.082$ (MICrONS), both negative (asymptotically
+stable). The MICrONS value ($\lambda_L \approx -0.082$) lies
+close to the critical point $\lambda_L = 0$, consistent with
+the cortical criticality hypothesis~\cite{Beggs2003,Shew2013}
+and suggesting that biological circuits operate closer to the
+edge of chaos than deterministic models predict.
+
+%% ════════════════════════════════════════════════════════════
+%%  VIII. DISCUSSION
+%% ════════════════════════════════════════════════════════════
+\section{\label{sec:discussion}Discussion}
+
+\subsection{A spectral invariant of cortical connectivity}
+
+The exponent $\alpha \approx -0.43$ is conserved across two
+independent datasets spanning different species (rat/mouse),
+cortical areas (SSCx/V1), measurement modalities (model/EM),
+and cortical layers (layer-matched $\Delta\alpha = 0.032$).
+AIC model selection establishes it as a true power law, not
+an exponential or harmonic decay. Its destruction by full rewiring
+($p < 0.001$) establishes biological specificity beyond
+degree distributions.
+
+The laminar gradient ($\alpha$ steepening L2/3$\to$L5/L6,
+$R^2=0.91$; $\rGOE$ decreasing toward Poisson) is consistent
+with the functional specialization of cortical layers: superficial
+layers perform distributed associative computation while deep
+layers project topographically organized signals subcortically.
+
+\subsection{Thermodynamic origin of EEG structure}
+
+The derivation of $n_{\max}=6$ from metabolic refractoriness
+provides a first-principles account of the six canonical EEG
+bands without free parameters. The two UV cutoffs --- Debye
+(state-dependent) and Planck (invariant, $\approx 587\,\mathrm{Hz}$)
+--- predict the empirically observed ceiling on sustained cortical
+oscillations. The thalamic prediction ($\approx 2580\,\mathrm{Hz}$)
+from the same framework, matching observed VHFOs (1235--2632\,Hz),
+constitutes an independent quantitative validation.
+
+\subsection{Proximity to criticality}
+
+The $\lambda_L = -0.082$ of MICrONS data (vs.\ $-0.224$ for
+simulation) suggests real cortical circuits self-organize toward
+the critical point~\cite{Beggs2003,Plenz2007}. The simulation's
+stronger stability reflects intrinsic limitations of deterministic
+models in capturing stochastic fluctuations driving criticality.
+
+\subsection{Limitations}
+
+The BBP dataset is a model with known idealizations.
+Symmetrization $J_s = (J+J^T)/2$ discards directional information.
+The MICrONS L4 extraction is approximate (coordinate-based, not
+ground-truth layer assignment). The Takens embedding is limited
+by small $K$ ($16$--$22$ outliers).
+
+%% ════════════════════════════════════════════════════════════
+%%  IX. CONCLUSIONS
+%% ════════════════════════════════════════════════════════════
+\section{\label{sec:conclusions}Conclusions}
+
+The ranked eigenvalues of cortical synaptic weight matrices follow
+a universal power law $\lambda_k \sim k^{-0.43}$ conserved between
+simulation and electron microscopy data, across species, areas,
+and layers, and destroyed by degree-preserving rewiring.
+Formal AIC model selection ($\Delta\mathrm{AIC} > 23$) establishes
+this as the preferred spectral model. The number of collective modes
+($\sim 20$), their GOE-type level-spacing statistics, and the
+quasi-1D phase-space geometry with $\lambda_L < 0$ (near-critical
+in EM data) jointly characterize cortical connectivity as operating
+in a stable but near-critical dynamical regime.
+The metabolic constraint $\kN \approx 0.15$ governs all these
+properties through the thermodynamic framework, including the
+discrete EEG frequency bands, the Debye ensemble cutoff, and the
+invariant Planck neuronal cutoff at $\approx 587\,\mathrm{Hz}$.
+
+%% ════════════════════════════════════════════════════════════
+%%  ACKNOWLEDGMENTS
+%% ════════════════════════════════════════════════════════════
+\begin{acknowledgments}
+The author thanks the Blue Brain Project and the Open Brain
+Institute for publicly releasing the neocortical connectivity
+data via AWS Open Data, and the MICrONS Consortium for the
+electron microscopy reconstruction. All analyses used open-source
+software (Python, NumPy, SciPy, h5py, Matplotlib) and
+publicly available datasets.
+\end{acknowledgments}
+
+\section*{Data Availability}
+All datasets are publicly available:
+BBP connectivity matrices at \texttt{s3://openbluebrain/}
+(no credentials required); MICrONS V1 at the same repository.
+Analysis code available at \texttt{[GitHub URL]}.
+
+%% ════════════════════════════════════════════════════════════
+%%  FIGURES
+%% ════════════════════════════════════════════════════════════
+
+\begin{figure}[t]
+  \includegraphics[width=\columnwidth]{marchenko_pastur_completo}
+  \caption{\label{fig:marchenko}
+    \textbf{Marchenko-Pastur analysis — BBP L2/3.}
+    ($n = 8{,}173$ neurons, $974{,}129$ synapses.)
+    \textit{Left}: Top 30 eigenvalues; orange bars exceed the MP
+    upper edge $\lp = 89.0$ (dashed red), identifying 20 synaptic
+    attractors. \textit{Right}: Same data on log scale confirming
+    $\lmax/\lp = 8.1\times$.}
+\end{figure}
+
+\begin{figure}[t]
+  \includegraphics[width=\columnwidth]{BBP_vs_MICrONS_final}
+  \caption{\label{fig:powerlaw}
+    \textbf{Universal power-law spectrum of synaptic attractors.}
+    BBP L2/3 (red, simulation, rat SSCx) vs.\ MICrONS V1
+    (green, electron microscopy, mouse V1).
+    \textit{Upper row}: Ranked eigenvalue spectra with power-law
+    fits ($\alpha = -0.450$, $R^2 = 0.990$ and $\alpha = -0.416$,
+    $R^2 = 0.986$). Both datasets are well above their respective
+    MP upper edges (dotted lines).
+    \textit{Lower row}: Eigenvalue spacings showing level-spacing
+    ratios $\rGOE = 0.535 \approx \mathrm{GOE}$ (BBP) and
+    $\rGOE = 0.654 > \mathrm{GOE}$ (MICrONS).}
+\end{figure}
+
+\begin{figure}[t]
+  \includegraphics[width=\columnwidth]{bootstrap_alpha}
+  \caption{\label{fig:bootstrap}
+    \textbf{Bootstrap analysis and null model validation.}
+    \textit{Upper left/center}: Bootstrap distributions of $\alpha$
+    ($n = 1{,}000$) for BBP and MICrONS with 95\% CIs.
+    CIs overlap, confirming $H_0: \alpha_{\mathrm{BBP}} =
+    \alpha_{\mathrm{MIC}}$.
+    \textit{Upper right}: Null model distribution ($n = 500$
+    full-rewiring permutations, $\bar\alpha = -0.141$),
+    completely separated from real values ($p < 0.001$).
+    \textit{Lower left}: Laminar gradient with bootstrap CIs.
+    \textit{Lower center/right}: Summary statistics.}
+\end{figure}
+
+\begin{figure}[t]
+  \includegraphics[width=\columnwidth]{layers_spectral}
+  \caption{\label{fig:laminar}
+    \textbf{Laminar gradient of the spectral exponent — BBP HEX0.}
+    \textit{Left}: $\alpha$ by layer; dashed line = MICrONS reference.
+    \textit{Center}: Level-spacing ratio $\rGOE$ by layer, with
+    GOE (dashed) and Poisson (dotted) references.
+    \textit{Right}: $\alpha$ vs.\ cortical depth, linear trend
+    $R^2 = 0.91$. Superficial layers (L2/3) have flatter spectra
+    ($\alpha = -0.451$) and stronger inter-attractor repulsion
+    ($\rGOE > \mathrm{GOE}$); deep layers (L5/L6) have steeper
+    spectra ($\alpha = -0.531$) and more independent modes
+    ($\rGOE < \mathrm{GOE}$).}
+\end{figure}
+
+\begin{figure}[t]
+  \includegraphics[width=\columnwidth]{planck_cognitivo}
+  \caption{\label{fig:planck}
+    \textbf{Cognitive Planck quantization and UV cutoffs.}
+    \textit{Upper left}: Bose-Einstein occupancy vs.\ frequency,
+    comparing classical Rayleigh-Jeans divergence with the cognitive
+    Planck distribution ($\fUV = 114\,\mathrm{Hz}$ at rest).
+    Vertical lines mark the six quantized EEG modes.
+    \textit{Upper right}: Ensemble UV cutoff $\fUV^{\mathrm{ens}}$
+    vs.\ activation fraction $\kN$.
+    \textit{Lower left}: Number of sustainable activation cycles
+    before metabolic collapse; annotation at $n_{\max} = N/k = 6$.
+    \textit{Lower right}: Quantized modes with Planck occupancy
+    (bars) and frequencies (green dots).}
+\end{figure}
+
+\begin{figure}[t]
+  \includegraphics[width=\columnwidth]{UV_catastrophe_v2}
+  \caption{\label{fig:uv}
+    \textbf{Cognitive UV catastrophe and phase diagram.}
+    \textit{Upper left}: Population integration time
+    $\taupop = \tauISI\sqrt{\kN}$ vs.\ activation; $\taupop = 19.3\,\mathrm{ms}$
+    at $\kN = 0.15$.
+    \textit{Upper right}: Dominant frequency vs.\ activation,
+    with labeled cognitive states (sustained attention:
+    $\kN \approx 0.30$; epileptic crisis: $\kN \to 1$).
+    \textit{Lower left}: Cognitive efficiency
+    (capacity/metabolic cost); $\kN = 0.15$ lies in the high-efficiency
+    plateau.
+    \textit{Lower right}: Cognitive phase diagram; shaded zone
+    marks the UV catastrophe region where population computation
+    collapses.}
+\end{figure}
+
+\begin{figure}[t]
+  \includegraphics[width=\columnwidth]{takens_phase_space}
+  \caption{\label{fig:takens}
+    \textbf{Phase-space structure via Takens delay embedding.}
+    Columns: BBP L2/3 (left) and MICrONS V1 (right).
+    \textit{Top}: Raw eigenvalue spectra.
+    \textit{Second row}: 2D phase-space trajectories
+    $(\lambda_i, \lambda_{i+1})$, colored by rank.
+    Both datasets trace smooth, quasi-1D curves characteristic
+    of low-dimensional attractors.
+    \textit{Third row}: 3D attractors confirming planar geometry.
+    \textit{Bottom}: Correlation dimension ($d_f = 1.15$ and $1.07$;
+    $R^2 > 0.98$). Maximal Lyapunov exponents:
+    $\lambda_L = -0.224$ (BBP, stable) and $-0.082$ (MICrONS,
+    near-critical).}
+\end{figure}
+
+\begin{figure}[t]
+  \includegraphics[width=\columnwidth]{dynamic_spectrum}
+  \caption{\label{fig:spectrum}
+    \textbf{Dynamic EEG spectrum across cognitive states.}
+    \textit{Left}: Frequencies $f_n = 1/(n\taupop)$ for $n=1,\ldots,6$
+    under three regimes (rest: blue; attention: orange; alert: red).
+    $n_{\max} = 6$ is invariant; only the frequency scale changes.
+    Shaded bands: clinical EEG ranges.
+    \textit{Right}: $f_1$ (gamma) and $f_6$ (theta) vs.\ $\tauISI$
+    on log-log axes. Vertical lines mark the three measured
+    refractory regimes. The invariant neuronal cutoff
+    $\fUV^{\mathrm{neural}} \approx 587\,\mathrm{Hz}$
+    (where $f_1(\tauabs) = \fUV^{\mathrm{neural}}$)
+    is off-scale to the right.}
+\end{figure}
+
+\begin{figure}[t]
+  \includegraphics[width=\columnwidth]{final_tests}
+  \caption{\label{fig:final}
+    \textbf{AIC model selection and layer-matched validation.}
+    \textit{Left}: $\Delta\mathrm{AIC}$ for four candidate models
+    (BBP: red; MICrONS: green). The power law wins in both datasets;
+    $\Delta\mathrm{AIC} > 10$ (dashed line) denotes strong evidence.
+    \textit{Center}: Visual fits for BBP L23 confirming that the
+    power law (solid) captures the curvature missed by the Boltzmann
+    (dashed) and harmonic (dotted) models.
+    \textit{Right}: Layer-matched comparison. BBP L4: $\alpha=-0.525$;
+    MICrONS L4: $\alpha=-0.557$; $\Delta\alpha = 0.032$, within
+    bootstrap uncertainty. MICrONS total ($-0.422$, dashed) aligns
+    with BBP L2/3, consistent with the predominantly superficial
+    sampling of the MICrONS volume.}
+\end{figure}
+
+%% ── Supplemental figures ─────────────────────────────────────
+
+\begin{figure}[t]
+  \includegraphics[width=\columnwidth]{tau_ISI_refinado}
+  \caption{\label{fig:tau}
+    \textbf{Population integration time — electrophysiological
+    validation.}
+    \textit{Left}: Distribution of ISI minimum (blue) and ISI p5
+    (orange) per cell ($n=9$, rat SSCx, IDRest protocol,
+    highest-current sweep). Median ISI$_{\min} = 8.5\,\mathrm{ms}$
+    (attention regime); median ISI$_{\mathrm{p5}} = 29.2\,\mathrm{ms}$.
+    Red dotted line: TCSV $\tau = 20\,\mathrm{ms}$, derived from
+    median ISI $= 49.8\,\mathrm{ms}$ via
+    $\taupop = \tauISI\sqrt{\kN} = 19.3\,\mathrm{ms}$.
+    \textit{Right}: Predicted EEG band frequencies for three
+    electrophysiological regimes vs.\ clinical references.}
+\end{figure}
+
+\begin{figure}[t]
+  \includegraphics[width=\columnwidth]{h_neural_volume}
+  \caption{\label{fig:hneural}
+    \textbf{Synaptic volume and informational density.}
+    MICrONS EM ($n = 11{,}554{,}213$ synapses). 
+    \textit{Upper left}: Log-normal distribution of synaptic volumes
+    ($\mu = 8.17$, $\sigma = 1.03$; Shannon entropy $H = 2.02\,\mathrm{bits}$).
+    \textit{Lower panels}: $h_{\mathrm{neural}}$ derived via
+    $E \cdot \tau / H$ as a function of synaptic volume.
+    The TCSV postulate $\hneu = 10^{-13}\,\mathrm{J\cdot s}$
+    corresponds to the activation entropy
+    $H_{\mathrm{act}} = \ln\binom{100}{15} = 58\,\mathrm{bits}$
+    of the microcircuit ensemble, not to the volume-encoded
+    structural information. The log-normal CV $\approx 1.04$
+    confirms the hyperbolic geometry of the semantic manifold.}
+\end{figure}
+
+%% ════════════════════════════════════════════════════════════
+%%  BIBLIOGRAPHY
+%% ════════════════════════════════════════════════════════════
+\begin{thebibliography}{99}
+
+\bibitem{Mountcastle1997}
+V.~B. Mountcastle,
+Brain \textbf{120}, 701 (1997).
+
+\bibitem{Attwell2001}
+D.~Attwell and S.~B. Laughlin,
+J.\ Cereb.\ Blood Flow Metab.\ \textbf{21}, 1133 (2001).
+
+\bibitem{Mehta2004}
+M.~L. Mehta,
+\emph{Random Matrices}, 3rd ed.\ (Elsevier, 2004).
+
+\bibitem{Mastrogiuseppe2018}
+F.~Mastrogiuseppe and S.~Ostojic,
+Neuron \textbf{99}, 609 (2018).
+
+\bibitem{Markram2015}
+H.~Markram \emph{et al.},
+Cell \textbf{163}, 456 (2015).
+
+\bibitem{MICrONS2021}
+MICrONS Consortium \emph{et al.},
+bioRxiv 2021.07.28.454025 (2021).
+
+\bibitem{Bhatt2009}
+D.~L. Bhatt \emph{et al.},
+J.\ Neurosci.\ \textbf{29}, 2065 (2009).
+
+\bibitem{Atas2013}
+Y.~Y. Atas \emph{et al.},
+Phys.\ Rev.\ Lett.\ \textbf{110}, 084101 (2013).
+
+\bibitem{Takens1981}
+F.~Takens, in \emph{Dynamical Systems and Turbulence},
+Lecture Notes in Mathematics \textbf{898} (Springer, 1981), p.~366.
+
+\bibitem{Rosenstein1993}
+M.~T. Rosenstein, J.~J. Collins, and C.~J. De~Luca,
+Physica D \textbf{65}, 117 (1993).
+
+\bibitem{Beggs2003}
+J.~M. Beggs and D.~Plenz,
+J.\ Neurosci.\ \textbf{23}, 11167 (2003).
+
+\bibitem{Plenz2007}
+D.~Plenz and T.~C. Thiagarajan,
+Trends Neurosci.\ \textbf{30}, 101 (2007).
+
+\bibitem{Shew2013}
+W.~L. Shew and D.~Plenz,
+Neuroscientist \textbf{19}, 88 (2013).
+
+\bibitem{Hashimoto2009}
+I.~Hashimoto \emph{et al.},
+Epilepsia \textbf{50}, 2049 (2009).
+
+\bibitem{Pribylova2024}
+L.~P\v{r}ibylov\'a \emph{et al.},
+Network Neurosci.\ \textbf{8}, 293 (2024).
+
+\end{thebibliography}
+
+\end{document}
